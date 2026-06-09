@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Clients | Finance Collecte{% endblock %}
+
+{% block content %}
+<section class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+    <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+        <div class="mb-5 flex items-end justify-between">
+            <div>
+                <p class="text-sm font-bold uppercase tracking-[0.3em] text-sand-600">Referentiel</p>
+                <h1 class="mt-2 text-3xl font-extrabold text-stone-950">Clients</h1>
+            </div>
+            <div class="text-sm text-stone-500">{{ total_count }} element(s)</div>
+        </div>
+        <form method="get" class="mb-5 grid gap-3 rounded-3xl bg-stone-50 p-4 xl:grid-cols-[1fr_180px_180px_180px_auto]">
+            <input type="text" name="q" value="{{ filters.q }}" placeholder="Code, nom, telephone..." class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+            <select name="agent_id" class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+                <option value="">Tous les agents</option>
+                {% for agent in agents_filter %}
+                    <option value="{{ agent.pk }}" {% if filters.agent_id == agent.pk|stringformat:'s' %}selected{% endif %}>{{ agent.matricule }}</option>
+                {% endfor %}
+            </select>
+            <select name="account_status" class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+                <option value="">Tous les comptes</option>
+                <option value="with_account" {% if filters.account_status == "with_account" %}selected{% endif %}>Avec compte</option>
+                <option value="without_account" {% if filters.account_status == "without_account" %}selected{% endif %}>Sans compte</option>
+            </select>
+            <div></div>
+            <div class="flex gap-2">
+                <button class="rounded-2xl bg-stone-950 px-4 py-3 text-sm font-bold uppercase tracking-[0.18em] text-white hover:bg-sand-700">
+                    Filtrer
+                </button>
+                <a href="{% url 'clients' %}" class="rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm font-semibold text-stone-700 hover:border-stone-900">
+                    Reset
+                </a>
+            </div>
+        </form>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-left text-sm">
+                <thead class="text-stone-500">
+                    <tr>
+                        <th class="pb-3">Code</th>
+                        <th class="pb-3">Nom complet</th>
+                        <th class="pb-3">Agent</th>
+                        <th class="pb-3">Telephone</th>
+                        <th class="pb-3">Compte</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                    {% for client in clients %}
+                        <tr>
+                            <td class="py-4 font-semibold text-stone-900">
+                                <a href="{% url 'client-detail' client.pk %}" class="hover:text-sand-700">{{ client.code_client }}</a>
+                            </td>
+                            <td class="py-4">{{ client.prenom }} {{ client.nom }}</td>
+                            <td class="py-4">{{ client.agent.matricule }}</td>
+                            <td class="py-4">{{ client.telephone }}</td>
+                            <td class="py-4">{{ client.user.username|default:"Aucun compte" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="py-6 text-stone-500">Aucun client visible.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "partials/pagination.html" %}
+    </div>
+
+    <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+        <div class="mb-6">
+            <p class="text-sm font-bold uppercase tracking-[0.3em] text-sand-600">Action</p>
+            <h2 class="mt-2 text-2xl font-extrabold text-stone-950">Nouveau client</h2>
+        </div>
+
+        {% if can_create %}
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{{ form.non_field_errors }}</div>
+                {% endif %}
+                {% for field in form %}
+                    <div>
+                        <label for="{{ field.id_for_label }}" class="text-sm font-semibold text-stone-700">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <p class="mt-1 text-xs text-stone-500">{{ field.help_text }}</p>
+                        {% endif %}
+                        {% if field.errors %}
+                            <p class="mt-2 text-sm text-rose-600">{{ field.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                <button class="w-full rounded-2xl bg-stone-950 px-5 py-3 text-sm font-bold uppercase tracking-[0.18em] text-white hover:bg-sand-700">
+                    Creer le client
+                </button>
+            </form>
+        {% else %}
+            <div class="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-4 text-sm text-stone-600">
+                Consultation seule pour votre role.
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

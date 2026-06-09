@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Agent {{ agent_profile.matricule }} | Finance Collecte{% endblock %}
+
+{% block content %}
+<section class="mb-6 rounded-[2rem] border border-white/80 bg-white/90 p-8 shadow-soft">
+    <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+            <p class="text-sm font-bold uppercase tracking-[0.3em] text-sand-600">Agent</p>
+            <h1 class="mt-2 text-4xl font-extrabold text-stone-950">{{ agent_profile.prenom }} {{ agent_profile.nom }}</h1>
+            <p class="mt-3 text-stone-600">
+                {{ agent_profile.matricule }} • {{ agent_profile.telephone }}{% if agent_profile.zone %} • {{ agent_profile.zone }}{% endif %}
+            </p>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-4">
+            <div class="rounded-3xl bg-stone-950 px-5 py-4 text-white">
+                <div class="text-xs uppercase tracking-[0.2em] text-stone-300">Compte</div>
+                <div class="mt-2 text-lg font-extrabold">{{ agent_profile.user.username|default:"Aucun" }}</div>
+            </div>
+            <div class="rounded-3xl bg-white px-5 py-4 text-stone-900 ring-1 ring-stone-200">
+                <div class="text-xs uppercase tracking-[0.2em] text-stone-400">Clients</div>
+                <div class="mt-2 text-2xl font-extrabold">{{ clients_count }}</div>
+            </div>
+            <div class="rounded-3xl bg-white px-5 py-4 text-stone-900 ring-1 ring-stone-200">
+                <div class="text-xs uppercase tracking-[0.2em] text-stone-400">Cycles</div>
+                <div class="mt-2 text-2xl font-extrabold">{{ cycles_count }}</div>
+            </div>
+            <div class="rounded-3xl bg-white px-5 py-4 text-stone-900 ring-1 ring-stone-200">
+                <div class="text-xs uppercase tracking-[0.2em] text-stone-400">Commission</div>
+                <div class="mt-2 text-2xl font-extrabold">{{ agent_profile.commission_totale }}</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="grid gap-6 xl:grid-cols-2">
+    <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+        <div class="mb-5 flex items-center justify-between">
+            <h2 class="text-xl font-extrabold text-stone-950">Clients geres</h2>
+            <a href="{% url 'clients' %}?agent_id={{ agent_profile.pk }}" class="text-sm font-semibold text-sand-700">Voir la liste complete</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-left text-sm">
+                <thead class="text-stone-500">
+                    <tr>
+                        <th class="pb-3">Code</th>
+                        <th class="pb-3">Nom complet</th>
+                        <th class="pb-3">Telephone</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                    {% for client in clients %}
+                        <tr>
+                            <td class="py-4 font-semibold"><a href="{% url 'client-detail' client.pk %}" class="hover:text-sand-700">{{ client.code_client }}</a></td>
+                            <td class="py-4">{{ client.prenom }} {{ client.nom }}</td>
+                            <td class="py-4">{{ client.telephone }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="3" class="py-6 text-stone-500">Aucun client pour cet agent.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+        <div class="mb-5 flex items-center justify-between">
+            <h2 class="text-xl font-extrabold text-stone-950">Cycles geres</h2>
+            <a href="{% url 'cycles' %}?agent_id={{ agent_profile.pk }}" class="text-sm font-semibold text-sand-700">Voir la liste complete</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-left text-sm">
+                <thead class="text-stone-500">
+                    <tr>
+                        <th class="pb-3">Cycle</th>
+                        <th class="pb-3">Client</th>
+                        <th class="pb-3">Mise</th>
+                        <th class="pb-3">Collectes</th>
+                        <th class="pb-3">Statut</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                    {% for cycle in cycles %}
+                        <tr>
+                            <td class="py-4 font-semibold"><a href="{% url 'cycle-detail' cycle.pk %}" class="hover:text-sand-700">#{{ cycle.pk }}</a></td>
+                            <td class="py-4">{{ cycle.client.code_client }}</td>
+                            <td class="py-4">{{ cycle.mise }}</td>
+                            <td class="py-4">{{ cycle.nb_collectes }}/31</td>
+                            <td class="py-4">{{ cycle.statut }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="py-6 text-stone-500">Aucun cycle pour cet agent.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

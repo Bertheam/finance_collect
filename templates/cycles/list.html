@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Cycles | Finance Collecte{% endblock %}
+
+{% block content %}
+<section class="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+    <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+        <div class="mb-5 flex items-end justify-between">
+            <div>
+                <p class="text-sm font-bold uppercase tracking-[0.3em] text-sand-600">Orchestration</p>
+                <h1 class="mt-2 text-3xl font-extrabold text-stone-950">Cycles</h1>
+            </div>
+            <div class="text-sm text-stone-500">{{ total_count }} element(s)</div>
+        </div>
+        <form method="get" class="mb-5 grid gap-3 rounded-3xl bg-stone-50 p-4 xl:grid-cols-[1fr_170px_170px_170px_auto]">
+            <input type="text" name="q" value="{{ filters.q }}" placeholder="Cycle, client, agent..." class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+            <select name="statut" class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+                <option value="">Tous les statuts</option>
+                <option value="EN_COURS" {% if filters.statut == "EN_COURS" %}selected{% endif %}>EN_COURS</option>
+                <option value="CLOTURE" {% if filters.statut == "CLOTURE" %}selected{% endif %}>CLOTURE</option>
+            </select>
+            <select name="agent_id" class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+                <option value="">Tous les agents</option>
+                {% for agent in agents_filter %}
+                    <option value="{{ agent.pk }}" {% if filters.agent_id == agent.pk|stringformat:'s' %}selected{% endif %}>{{ agent.matricule }}</option>
+                {% endfor %}
+            </select>
+            <select name="client_id" class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+                <option value="">Tous les clients</option>
+                {% for client in clients_filter %}
+                    <option value="{{ client.pk }}" {% if filters.client_id == client.pk|stringformat:'s' %}selected{% endif %}>{{ client.code_client }}</option>
+                {% endfor %}
+            </select>
+            <div class="flex gap-2">
+                <button class="rounded-2xl bg-stone-950 px-4 py-3 text-sm font-bold uppercase tracking-[0.18em] text-white hover:bg-sand-700">
+                    Filtrer
+                </button>
+                <a href="{% url 'cycles' %}" class="rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm font-semibold text-stone-700 hover:border-stone-900">
+                    Reset
+                </a>
+            </div>
+        </form>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-left text-sm">
+                <thead class="text-stone-500">
+                    <tr>
+                        <th class="pb-3">Cycle</th>
+                        <th class="pb-3">Client</th>
+                        <th class="pb-3">Agent</th>
+                        <th class="pb-3">Mise</th>
+                        <th class="pb-3">Collectes</th>
+                        <th class="pb-3">Statut</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                    {% for cycle in cycles %}
+                        <tr>
+                            <td class="py-4 font-semibold"><a href="{% url 'cycle-detail' cycle.pk %}" class="hover:text-sand-700">#{{ cycle.id }}</a></td>
+                            <td class="py-4">{{ cycle.client.code_client }}</td>
+                            <td class="py-4">{{ cycle.agent.matricule }}</td>
+                            <td class="py-4">{{ cycle.mise }}</td>
+                            <td class="py-4">{{ cycle.nb_collectes }}/31</td>
+                            <td class="py-4">{{ cycle.statut }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="6" class="py-6 text-stone-500">Aucun cycle visible.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "partials/pagination.html" %}
+    </div>
+
+    <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+        <div class="mb-6">
+            <p class="text-sm font-bold uppercase tracking-[0.3em] text-sand-600">Action</p>
+            <h2 class="mt-2 text-2xl font-extrabold text-stone-950">Nouveau cycle</h2>
+        </div>
+
+        {% if can_create %}
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{{ form.non_field_errors }}</div>
+                {% endif %}
+                {% for field in form %}
+                    <div>
+                        <label for="{{ field.id_for_label }}" class="text-sm font-semibold text-stone-700">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <p class="mt-2 text-sm text-rose-600">{{ field.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                <button class="w-full rounded-2xl bg-stone-950 px-5 py-3 text-sm font-bold uppercase tracking-[0.18em] text-white hover:bg-sand-700">
+                    Creer le cycle
+                </button>
+            </form>
+        {% else %}
+            <div class="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-4 text-sm text-stone-600">
+                Consultation seule pour votre role.
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

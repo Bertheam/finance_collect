@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Mouvements | Finance Collecte{% endblock %}
+
+{% block content %}
+<section class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+    <div class="mb-5 flex items-end justify-between">
+        <div>
+            <p class="text-sm font-bold uppercase tracking-[0.3em] text-sand-600">Traceabilite</p>
+            <h1 class="mt-2 text-3xl font-extrabold text-stone-950">Mouvements financiers</h1>
+        </div>
+        <div class="text-sm text-stone-500">{{ total_count }} element(s)</div>
+    </div>
+
+    <form method="get" class="mb-5 grid gap-3 rounded-3xl bg-stone-50 p-4 xl:grid-cols-[1fr_220px_220px_auto]">
+        <input type="text" name="q" value="{{ filters.q }}" placeholder="Client, agent, cycle..." class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+        <select name="type_mouvement" class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+            <option value="">Tous les types</option>
+            {% for value, label in type_choices %}
+                <option value="{{ value }}" {% if filters.type_mouvement == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <select name="client_id" class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+            <option value="">Tous les clients</option>
+            {% for client in clients_filter %}
+                <option value="{{ client.pk }}" {% if filters.client_id == client.pk|stringformat:'s' %}selected{% endif %}>{{ client.code_client }}</option>
+            {% endfor %}
+        </select>
+        <div class="flex gap-2">
+            <button class="rounded-2xl bg-stone-950 px-4 py-3 text-sm font-bold uppercase tracking-[0.18em] text-white hover:bg-sand-700">Filtrer</button>
+            <a href="{% url 'mouvements' %}" class="rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm font-semibold text-stone-700 hover:border-stone-900">Reset</a>
+        </div>
+    </form>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-left text-sm">
+            <thead class="text-stone-500">
+                <tr>
+                    <th class="pb-3">Date</th>
+                    <th class="pb-3">Type</th>
+                    <th class="pb-3">Client</th>
+                    <th class="pb-3">Agent</th>
+                    <th class="pb-3">Cycle</th>
+                    <th class="pb-3">Flux</th>
+                    <th class="pb-3">Montant</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100">
+                {% for mouvement in mouvements %}
+                    <tr>
+                        <td class="py-4">{{ mouvement.created_at|date:"d/m/Y H:i" }}</td>
+                        <td class="py-4 font-semibold text-stone-900">{{ mouvement.type_mouvement }}</td>
+                        <td class="py-4">{% if mouvement.client %}{{ mouvement.client.code_client }}{% else %}-{% endif %}</td>
+                        <td class="py-4">{% if mouvement.agent %}{{ mouvement.agent.matricule }}{% else %}-{% endif %}</td>
+                        <td class="py-4">{% if mouvement.cycle_id %}#{{ mouvement.cycle_id }}{% else %}-{% endif %}</td>
+                        <td class="py-4">{{ mouvement.source }} -> {{ mouvement.destination }}</td>
+                        <td class="py-4">{{ mouvement.montant }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7" class="py-6 text-stone-500">Aucun mouvement visible.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% include "partials/pagination.html" %}
+</section>
+{% endblock %}
