@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Agent, Client, User
+from .models import Agent, Client, Notification, User
 
 
 @admin.register(User)
@@ -21,3 +21,10 @@ class ClientAdmin(admin.ModelAdmin):
     list_display = ("code_client", "prenom", "nom", "telephone", "agent")
     list_filter = ("agent",)
     search_fields = ("code_client", "prenom", "nom", "telephone", "email")
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ("title", "user", "is_read", "created_at")
+    list_filter = ("is_read", "created_at")
+    search_fields = ("title", "message", "user__username")

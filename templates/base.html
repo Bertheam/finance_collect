@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -8,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -45,32 +47,138 @@
     </div>
 
     {% if user.is_authenticated %}
-        <header class="border-b border-white/70 bg-white/80 backdrop-blur">
-            <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-                <div>
-                    <a href="{% url 'dashboard' %}" class="text-lg font-extrabold tracking-tight text-sand-800">Finance Collecte</a>
-                    <p class="text-xs uppercase tracking-[0.25em] text-stone-500">Tontine IAM Spec-Driven</p>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div class="hidden rounded-2xl bg-stone-900 px-4 py-2 text-right text-xs text-white shadow-soft sm:block">
-                        <div class="font-semibold">{{ user.get_full_name|default:user.username }}</div>
-                        <div class="text-stone-300">{{ user.role }}</div>
+        <header class="pt-5 sm:pt-6">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="relative rounded-[2.5rem] border border-white/90 shadow-soft">
+                    <div class="absolute inset-0 overflow-hidden rounded-[2.5rem]">
+                        <div
+                            class="absolute inset-0 bg-cover bg-center"
+                            style="background-image: url('{% static 'images/finance/header_bg.png' %}'); background-position: center right;"
+                        ></div>
+                        <div class="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/35"></div>
+                        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.18),_transparent_42%)]"></div>
                     </div>
-                    <form method="post" action="{% url 'logout' %}">
-                        {% csrf_token %}
-                        <button class="rounded-2xl border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:border-stone-900 hover:text-stone-900">
-                            Deconnexion
-                        </button>
-                    </form>
+
+                    <div class="relative px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+                        <div class="flex flex-col gap-6 lg:gap-8">
+                            <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                                <a href="{% url 'dashboard' %}" class="flex items-center gap-4">
+                                    <span class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[1.75rem] border border-white/80 bg-white/70 shadow-[0_20px_45px_rgba(115,79,24,0.10)] backdrop-blur">
+                                        <img
+                                            src="{% static 'images/finance/savings-jar.png' %}"
+                                            alt="Illustration d'épargne"
+                                            class="h-10 w-10 object-contain"
+                                        >
+                                    </span>
+                                    <span class="block">
+                                        <span class="block text-2xl font-extrabold tracking-tight text-stone-900 sm:text-3xl">Finance Collecte</span>
+                                        <span class="mt-1 block text-[0.72rem] font-medium uppercase tracking-[0.42em] text-stone-500 sm:text-sm">Gestion d’épargne</span>
+                                    </span>
+                                </a>
+
+                                <div class="flex flex-wrap items-center gap-3 lg:justify-end">
+                                    <details class="relative z-40">
+                                        <summary class="relative inline-flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-2xl border border-white/80 bg-white/78 text-stone-700 shadow-[0_12px_30px_rgba(87,53,14,0.08)] backdrop-blur transition hover:border-stone-900 hover:text-stone-900">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0a3 3 0 1 1-6 0m6 0H9"/>
+                                            </svg>
+                                            {% if unread_notifications_count %}
+                                                <span class="absolute -right-2 -top-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-white shadow-sm">
+                                                    {{ unread_notifications_count }}
+                                                </span>
+                                            {% endif %}
+                                        </summary>
+                                        <div class="absolute left-0 top-[calc(100%+0.9rem)] z-50 w-[min(22rem,calc(100vw-3rem))] overflow-hidden rounded-[1.9rem] border border-white/90 bg-white/95 shadow-[0_28px_70px_rgba(87,53,14,0.16)] backdrop-blur-2xl sm:left-auto sm:right-0 sm:w-[22rem]">
+                                            <div class="flex items-center justify-between border-b border-stone-100 px-5 py-4">
+                                                <div>
+                                                    <div class="text-sm font-bold text-stone-950">Notifications</div>
+                                                    <div class="text-xs text-stone-400">{{ total_notifications_count }} non lue(s)</div>
+                                                </div>
+                                                <a href="{% url 'notifications' %}" class="text-xs font-semibold uppercase tracking-[0.18em] text-sand-700">Tout voir</a>
+                                            </div>
+                                            <div class="max-h-[30rem] overflow-y-auto p-3">
+                                                {% for notification in notification_preview %}
+                                                    <div class="mb-3 rounded-2xl border {% if notification.is_read %}border-stone-200 bg-white{% else %}border-amber-200 bg-amber-50/70{% endif %} px-4 py-3 last:mb-0">
+                                                        <div class="flex items-start justify-between gap-3">
+                                                            <div class="min-w-0">
+                                                                <div class="flex items-center gap-2">
+                                                                    <div class="truncate text-sm font-semibold text-stone-950">{{ notification.title }}</div>
+                                                                    {% if not notification.is_read %}
+                                                                        <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+                                                                    {% endif %}
+                                                                </div>
+                                                                <div class="mt-1 break-words text-sm text-stone-600">{{ notification.message }}</div>
+                                                                <div class="mt-2 text-[11px] uppercase tracking-[0.16em] text-stone-400">{{ notification.created_at|date:"d/m/Y H:i" }}</div>
+                                                            </div>
+                                                            <div class="flex shrink-0 gap-2">
+                                                                {% if notification.link %}
+                                                                    <a href="{{ notification.link }}" class="rounded-full border border-stone-300 px-3 py-1 text-[11px] font-semibold text-stone-700 hover:border-stone-900">
+                                                                        Ouvrir
+                                                                    </a>
+                                                                {% endif %}
+                                                                {% if not notification.is_read %}
+                                                                    <form method="post" action="{% url 'notification-read' notification.pk %}">
+                                                                        {% csrf_token %}
+                                                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                                                        <button class="rounded-full bg-stone-900 px-3 py-1 text-[11px] font-semibold text-white hover:bg-sand-700">
+                                                                            Lue
+                                                                        </button>
+                                                                    </form>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                {% empty %}
+                                                    <div class="rounded-[1.4rem] border border-stone-200 bg-stone-50/90 px-4 py-6 text-sm text-stone-500">
+                                                        Aucune notification pour le moment.
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </details>
+                                    <div class="hidden rounded-2xl border border-white/80 bg-white/76 px-4 py-2 text-right text-xs text-stone-700 shadow-[0_12px_30px_rgba(87,53,14,0.08)] backdrop-blur sm:block">
+                                        <div class="font-semibold text-stone-900">{{ user.get_full_name|default:user.username }}</div>
+                                        <div class="uppercase tracking-[0.18em] text-stone-500">{{ user.role }}</div>
+                                    </div>
+                                    <form method="post" action="{% url 'logout' %}">
+                                        {% csrf_token %}
+                                        <button class="rounded-2xl border border-white/80 bg-white/78 px-4 py-2 text-sm font-medium text-stone-700 shadow-[0_12px_30px_rgba(87,53,14,0.08)] backdrop-blur transition hover:border-stone-900 hover:text-stone-900">
+                                            Déconnexion
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <nav class="inline-flex w-fit max-w-full self-start flex-wrap items-center gap-2 rounded-[1.7rem] border border-white/80 bg-white/72 p-2 shadow-[0_18px_40px_rgba(87,53,14,0.10)] backdrop-blur-xl sm:rounded-full">
+                                <a href="{% url 'dashboard' %}" class="rounded-full px-5 py-2.5 text-sm font-semibold {% if request.resolver_match.url_name == 'dashboard' %}bg-stone-900 text-white shadow-[0_10px_24px_rgba(28,25,23,0.22)]{% else %}text-stone-700 hover:bg-white/70{% endif %}">Tableau de bord</a>
+                                {% if user.role == 'CLIENT' %}
+                                    <a href="{% url 'my-client-space' %}" class="rounded-full px-5 py-2.5 text-sm font-semibold {% if request.resolver_match.url_name == 'client-detail' or request.resolver_match.url_name == 'my-client-space' %}bg-stone-900 text-white shadow-[0_10px_24px_rgba(28,25,23,0.22)]{% else %}text-stone-700 hover:bg-white/70{% endif %}">Mon dossier</a>
+                                {% else %}
+                                    <a href="{% url 'clients' %}" class="rounded-full px-5 py-2.5 text-sm font-semibold {% if request.resolver_match.url_name == 'clients' or request.resolver_match.url_name == 'client-detail' %}bg-stone-900 text-white shadow-[0_10px_24px_rgba(28,25,23,0.22)]{% else %}text-stone-700 hover:bg-white/70{% endif %}">Clients</a>
+                                {% endif %}
+                                {% if user.role == 'ADMIN' %}
+                                    <a href="{% url 'agents' %}" class="rounded-full px-5 py-2.5 text-sm font-semibold {% if request.resolver_match.url_name == 'agents' or request.resolver_match.url_name == 'agent-detail' %}bg-stone-900 text-white shadow-[0_10px_24px_rgba(28,25,23,0.22)]{% else %}text-stone-700 hover:bg-white/70{% endif %}">Agents</a>
+                                {% endif %}
+                                <a href="{% url 'cycles' %}" class="rounded-full px-5 py-2.5 text-sm font-semibold {% if request.resolver_match.url_name == 'cycles' or request.resolver_match.url_name == 'cycle-detail' %}bg-stone-900 text-white shadow-[0_10px_24px_rgba(28,25,23,0.22)]{% else %}text-stone-700 hover:bg-white/70{% endif %}">Cycles</a>
+                                {% if user.role == 'ADMIN' or user.role == 'AGENT' %}
+                                    <a href="{% url 'commissions' %}" class="rounded-full px-5 py-2.5 text-sm font-semibold {% if request.resolver_match.url_name == 'commissions' %}bg-stone-900 text-white shadow-[0_10px_24px_rgba(28,25,23,0.22)]{% else %}text-stone-700 hover:bg-white/70{% endif %}">Commissions</a>
+                                    <a href="{% url 'demandes-retrait' %}" class="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold {% if request.resolver_match.url_name == 'demandes-retrait' %}bg-stone-900 text-white shadow-[0_10px_24px_rgba(28,25,23,0.22)]{% else %}text-stone-700 hover:bg-white/70{% endif %}">
+                                        <span>Demandes</span>
+                                        {% if pending_demandes_count %}
+                                            <span class="rounded-full {% if request.resolver_match.url_name == 'demandes-retrait' %}bg-white/20 text-white{% else %}bg-amber-100 text-amber-800{% endif %} px-2 py-0.5 text-[11px] font-bold">
+                                                {{ pending_demandes_count }}
+                                            </span>
+                                        {% endif %}
+                                    </a>
+                                {% endif %}
+                                {% if user.role != 'CLIENT' %}
+                                    <a href="{% url 'mouvements' %}" class="rounded-full px-5 py-2.5 text-sm font-semibold {% if request.resolver_match.url_name == 'mouvements' %}bg-stone-900 text-white shadow-[0_10px_24px_rgba(28,25,23,0.22)]{% else %}text-stone-700 hover:bg-white/70{% endif %}">Mouvements</a>
+                                {% endif %}
+                            </nav>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <nav class="mx-auto flex max-w-7xl flex-wrap gap-2 px-4 pb-4 sm:px-6 lg:px-8">
-                <a href="{% url 'dashboard' %}" class="rounded-full px-4 py-2 text-sm font-semibold {% if request.resolver_match.url_name == 'dashboard' %}bg-stone-900 text-white{% else %}bg-white text-stone-700{% endif %}">Tableau de bord</a>
-                <a href="{% url 'clients' %}" class="rounded-full px-4 py-2 text-sm font-semibold {% if request.resolver_match.url_name == 'clients' or request.resolver_match.url_name == 'client-detail' %}bg-stone-900 text-white{% else %}bg-white text-stone-700{% endif %}">Clients</a>
-                <a href="{% url 'agents' %}" class="rounded-full px-4 py-2 text-sm font-semibold {% if request.resolver_match.url_name == 'agents' or request.resolver_match.url_name == 'agent-detail' %}bg-stone-900 text-white{% else %}bg-white text-stone-700{% endif %}">Agents</a>
-                <a href="{% url 'cycles' %}" class="rounded-full px-4 py-2 text-sm font-semibold {% if request.resolver_match.url_name == 'cycles' or request.resolver_match.url_name == 'cycle-detail' %}bg-stone-900 text-white{% else %}bg-white text-stone-700{% endif %}">Cycles</a>
-                <a href="{% url 'mouvements' %}" class="rounded-full px-4 py-2 text-sm font-semibold {% if request.resolver_match.url_name == 'mouvements' %}bg-stone-900 text-white{% else %}bg-white text-stone-700{% endif %}">Mouvements</a>
-            </nav>
         </header>
     {% endif %}
 
@@ -78,8 +186,11 @@
         {% if messages %}
             <div class="mb-6 space-y-3">
                 {% for message in messages %}
-                    <div class="rounded-2xl border px-4 py-3 text-sm shadow-sm {% if message.tags == 'error' %}border-rose-200 bg-rose-50 text-rose-700{% else %}border-emerald-200 bg-emerald-50 text-emerald-700{% endif %}">
-                        {{ message }}
+                    <div class="flex items-start justify-between gap-4 rounded-2xl border px-4 py-3 text-sm shadow-sm {% if message.tags == 'error' %}border-rose-200 bg-rose-50 text-rose-700{% else %}border-emerald-200 bg-emerald-50 text-emerald-700{% endif %}">
+                        <div>{{ message }}</div>
+                        <button type="button" class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-current/20 text-base leading-none opacity-70 transition hover:opacity-100" onclick="this.parentElement.remove()" aria-label="Fermer le message">
+                            <span aria-hidden="true">×</span>
+                        </button>
                     </div>
                 {% endfor %}
             </div>
@@ -87,5 +198,115 @@
 
         {% block content %}{% endblock %}
     </main>
+    <script>
+        (() => {
+            const activeClasses = ["bg-stone-900", "text-white", "shadow-[0_10px_24px_rgba(28,25,23,0.18)]"];
+            const inactiveClasses = ["bg-white", "text-stone-700"];
+
+            document.querySelectorAll("[data-tab-group]").forEach((group) => {
+                const buttons = Array.from(group.querySelectorAll("[data-tab-target]"));
+                const panels = Array.from(group.querySelectorAll("[data-tab-panel]"));
+                if (!buttons.length || !panels.length) return;
+
+                const activate = (name) => {
+                    buttons.forEach((button) => {
+                        const isActive = button.dataset.tabTarget === name;
+                        button.classList.remove(...activeClasses, ...inactiveClasses);
+                        button.classList.add(...(isActive ? activeClasses : inactiveClasses));
+                        button.setAttribute("aria-selected", isActive ? "true" : "false");
+                    });
+
+                    panels.forEach((panel) => {
+                        panel.classList.toggle("hidden", panel.dataset.tabPanel !== name);
+                    });
+                };
+
+                const initial =
+                    group.dataset.defaultTab ||
+                    buttons[0].dataset.tabTarget;
+
+                buttons.forEach((button) => {
+                    button.addEventListener("click", () => activate(button.dataset.tabTarget));
+                });
+
+                activate(initial);
+            });
+        })();
+
+        (() => {
+            const exclusiveDetails = Array.from(document.querySelectorAll("details[data-exclusive-details]"));
+
+            const closeScopedDetails = (current) => {
+                const scope = current.dataset.exclusiveDetails;
+                exclusiveDetails.forEach((detail) => {
+                    if (detail !== current && detail.dataset.exclusiveDetails === scope) {
+                        detail.removeAttribute("open");
+                    }
+                });
+            };
+
+            exclusiveDetails.forEach((detail) => {
+                detail.addEventListener("toggle", () => {
+                    if (detail.open) closeScopedDetails(detail);
+                });
+            });
+
+            document.addEventListener("click", (event) => {
+                exclusiveDetails.forEach((detail) => {
+                    if (!detail.contains(event.target)) {
+                        detail.removeAttribute("open");
+                    }
+                });
+            });
+
+            document.addEventListener("keydown", (event) => {
+                if (event.key !== "Escape") return;
+                exclusiveDetails.forEach((detail) => detail.removeAttribute("open"));
+            });
+
+            document.querySelectorAll("[data-close-details]").forEach((element) => {
+                element.addEventListener("click", () => {
+                    const parentDetail = element.closest("details[data-exclusive-details]");
+                    if (parentDetail) parentDetail.removeAttribute("open");
+                });
+            });
+        })();
+
+        (() => {
+            document.querySelectorAll("form[data-confirm-title]").forEach((form) => {
+                form.addEventListener("submit", async (event) => {
+                    if (form.dataset.confirmed === "true") return;
+
+                    event.preventDefault();
+
+                    if (typeof Swal === "undefined") {
+                        const fallbackConfirmed = window.confirm(form.dataset.confirmTitle || "Confirmer cette action ?");
+                        if (!fallbackConfirmed) return;
+                        form.dataset.confirmed = "true";
+                        HTMLFormElement.prototype.submit.call(form);
+                        return;
+                    }
+
+                    const result = await Swal.fire({
+                        title: form.dataset.confirmTitle,
+                        text: form.dataset.confirmText || "",
+                        icon: form.dataset.confirmIcon || "warning",
+                        showCancelButton: true,
+                        confirmButtonText: form.dataset.confirmButton || "Confirmer",
+                        cancelButtonText: form.dataset.cancelButton || "Annuler",
+                        confirmButtonColor: "#111827",
+                        cancelButtonColor: "#d6d3d1",
+                        reverseButtons: true,
+                    });
+
+                    if (!result.isConfirmed) return;
+
+                    form.dataset.confirmed = "true";
+                    HTMLFormElement.prototype.submit.call(form);
+                });
+            });
+        })();
+    </script>
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

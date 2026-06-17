@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier {{ agent_profile.matricule }} | Finance Collecte{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-4xl space-y-6">
+    <div class="rounded-[2rem] border border-white/80 bg-white/90 p-8 shadow-soft">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <p class="text-sm font-bold uppercase tracking-[0.3em] text-sand-600">Mise à jour</p>
+                <h1 class="mt-2 text-3xl font-extrabold text-stone-950">Modifier l’agent</h1>
+                <p class="mt-3 text-stone-600">{{ agent_profile.matricule }} • {{ agent_profile.prenom }} {{ agent_profile.nom }}</p>
+            </div>
+            <a href="{% url 'agent-detail' agent_profile.pk %}" class="rounded-2xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-medium text-stone-700 hover:border-stone-900">
+                Retour au détail
+            </a>
+        </div>
+    </div>
+
+    <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+        <form method="post" class="grid gap-4 md:grid-cols-2">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 md:col-span-2">{{ form.non_field_errors }}</div>
+            {% endif %}
+            {% for field in form %}
+                {% include "partials/form_field.html" with field=field %}
+            {% endfor %}
+            <div class="flex flex-wrap gap-3 md:col-span-2">
+                <button class="rounded-2xl bg-stone-950 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sand-700">
+                    Enregistrer les modifications
+                </button>
+                <a href="{% url 'agent-detail' agent_profile.pk %}" class="rounded-2xl border border-stone-300 bg-white px-5 py-2.5 text-sm font-medium text-stone-700 hover:border-stone-900">
+                    Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

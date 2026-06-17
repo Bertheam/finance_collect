@@ -18,7 +18,10 @@ class CycleForm(TailwindFormMixin, forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
-        queryset = Client.objects.select_related("agent").order_by("code_client")
+        queryset = Client.objects.select_related("agent").filter(
+            deleted_at__isnull=True,
+            agent__deleted_at__isnull=True,
+        ).order_by("code_client")
 
         if user and user.role == "AGENT":
             agent = getattr(user, "agent_profile", None)
@@ -45,6 +48,32 @@ class RetraitForm(TailwindFormMixin, forms.Form):
     montant = forms.IntegerField(
         label="Montant du retrait",
         min_value=1,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.apply_tailwind()
+
+
+class DemandeRetraitForm(TailwindFormMixin, forms.Form):
+    TYPE_CHOICES = (
+        ("ANTICIPE", "Retrait anticipé"),
+        ("NORMAL", "Retrait normal"),
+    )
+
+    type_demande = forms.ChoiceField(
+        label="Type de demande",
+        choices=TYPE_CHOICES,
+    )
+    montant_souhaite = forms.IntegerField(
+        label="Montant souhaité",
+        min_value=1,
+        required=False,
+    )
+    motif = forms.CharField(
+        label="Motif",
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 3}),
     )
 
     def __init__(self, *args, **kwargs):

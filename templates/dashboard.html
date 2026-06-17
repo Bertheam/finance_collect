@@ -1,104 +1,44 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Tableau de bord | Finance Collecte{% endblock %}
 
 {% block content %}
-<section class="mb-8 rounded-[2rem] border border-white/80 bg-white/90 p-8 shadow-soft">
-    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-            <p class="text-sm font-bold uppercase tracking-[0.3em] text-sand-600">Vue d'ensemble</p>
-            <h1 class="mt-3 text-4xl font-extrabold text-stone-950">Tableau de bord operationnel</h1>
-            <p class="mt-3 max-w-2xl text-stone-600">
-                Suivi des clients, des cycles, des depots, des retraits et de la traceabilite financiere.
-            </p>
+{% if dashboard_variant == "admin" %}
+    <section class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <div class="text-sm font-semibold text-stone-500">Cycles visibles</div>
+            <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.cycles_count }}</div>
         </div>
-        <div class="rounded-3xl bg-stone-950 px-6 py-4 text-white">
-            <div class="text-xs uppercase tracking-[0.25em] text-stone-300">Connecte en tant que</div>
-            <div class="mt-2 text-xl font-extrabold">{{ user.get_full_name|default:user.username }}</div>
-            <div class="text-stone-300">{{ user.role }}</div>
+        <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <div class="text-sm font-semibold text-stone-500">Cycles en cours</div>
+            <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.cycles_en_cours }}</div>
         </div>
-    </div>
-</section>
+        <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <div class="text-sm font-semibold text-stone-500">Clients visibles</div>
+            <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.clients_count }}</div>
+        </div>
+        <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <div class="text-sm font-semibold text-stone-500">Montant retirable cumulé</div>
+            <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.montant_total_retirable }} FCFA</div>
+        </div>
+        <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <div class="text-sm font-semibold text-stone-500">Commission totale agents</div>
+            <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.commission_agent_total }} FCFA</div>
+        </div>
+        <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <div class="text-sm font-semibold text-stone-500">Commission totale institution</div>
+            <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.commission_institution_total }} FCFA</div>
+        </div>
+    </section>
 
-<section class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-    <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
-        <div class="text-sm font-semibold text-stone-500">Cycles visibles</div>
-        <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.cycles_count }}</div>
-    </div>
-    <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
-        <div class="text-sm font-semibold text-stone-500">Cycles en cours</div>
-        <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.cycles_en_cours }}</div>
-    </div>
-    <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
-        <div class="text-sm font-semibold text-stone-500">Clients visibles</div>
-        <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.clients_count }}</div>
-    </div>
-    <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
-        <div class="text-sm font-semibold text-stone-500">Montant retirable cumule</div>
-        <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.montant_total_retirable }}</div>
-    </div>
-</section>
-
-<section class="mt-8 grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
-    <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
-        <div class="mb-5 flex items-center justify-between">
-            <h2 class="text-xl font-extrabold text-stone-950">Cycles recents</h2>
-            <a href="{% url 'cycles' %}" class="text-sm font-semibold text-sand-700">Voir tout</a>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full text-left text-sm">
-                <thead class="text-stone-500">
-                    <tr>
-                        <th class="pb-3">Cycle</th>
-                        <th class="pb-3">Client</th>
-                        <th class="pb-3">Agent</th>
-                        <th class="pb-3">Collectes</th>
-                        <th class="pb-3">Statut</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-stone-100">
-                    {% for cycle in recent_cycles %}
-                        <tr>
-                            <td class="py-4 font-semibold"><a href="{% url 'cycle-detail' cycle.pk %}" class="hover:text-sand-700">#{{ cycle.id }}</a></td>
-                            <td class="py-4">{{ cycle.client.code_client }}</td>
-                            <td class="py-4">{{ cycle.agent.matricule }}</td>
-                            <td class="py-4">{{ cycle.nb_collectes }}/31</td>
-                            <td class="py-4">{{ cycle.statut }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr><td colspan="5" class="py-6 text-stone-500">Aucun cycle pour le moment.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="space-y-6">
-        <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
-            <h2 class="text-xl font-extrabold text-stone-950">Agents en tete</h2>
-            <div class="mt-4 space-y-4">
-                {% for agent in top_agents %}
-                    <div class="rounded-2xl bg-stone-50 px-4 py-4">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="font-bold text-stone-900">{{ agent.prenom }} {{ agent.nom }}</div>
-                                <div class="text-sm text-stone-500">{{ agent.matricule }} • {{ agent.zone|default:"Zone non definie" }}</div>
-                            </div>
-                            <div class="text-right">
-                                <div class="font-extrabold text-sand-700">{{ agent.commission_totale }}</div>
-                                <div class="text-xs uppercase tracking-[0.2em] text-stone-400">{{ agent.clients_count }} clients</div>
-                            </div>
-                        </div>
-                    </div>
-                {% empty %}
-                    <p class="text-sm text-stone-500">Aucun agent visible.</p>
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+    <section class="mt-8 grid gap-6 xl:items-start xl:grid-cols-[0.9fr_1.15fr_0.75fr]">
+        <div class="self-start rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
             <div class="mb-5 flex items-center justify-between">
-                <h2 class="text-xl font-extrabold text-stone-950">Derniers mouvements</h2>
+                <div>
+                    <h2 class="text-xl font-extrabold text-stone-950">Derniers mouvements</h2>
+                    <p class="mt-1 text-xs text-stone-400">Affichage limité à {{ recent_mouvements_limit }} lignes</p>
+                </div>
                 <a href="{% url 'mouvements' %}" class="text-sm font-semibold text-sand-700">Historique</a>
             </div>
             <div class="mt-4 space-y-3">
@@ -116,10 +56,322 @@
                         </div>
                     </div>
                 {% empty %}
-                    <p class="text-sm text-stone-500">Aucun mouvement recent.</p>
+                    <p class="text-sm text-stone-500">Aucun mouvement récent.</p>
                 {% endfor %}
             </div>
         </div>
-    </div>
-</section>
+
+        <div class="self-start rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <div class="mb-5 flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-extrabold text-stone-950">Cycles récents</h2>
+                    <p class="mt-1 text-xs text-stone-400">Affichage limité à {{ recent_cycles_limit }} lignes</p>
+                </div>
+                <a href="{% url 'cycles' %}" class="text-sm font-semibold text-sand-700">Voir tout</a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-left text-sm">
+                    <thead class="text-stone-500">
+                        <tr>
+                            <th class="pb-3">Cycle</th>
+                            <th class="pb-3">Client</th>
+                            <th class="pb-3">Agent</th>
+                            <th class="pb-3">Collectes</th>
+                            <th class="pb-3">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-stone-100">
+                        {% for cycle in recent_cycles %}
+                            <tr>
+                                <td class="py-4 font-semibold"><a href="{% url 'cycle-detail' cycle.pk %}" class="hover:text-sand-700">#{{ cycle.id }}</a></td>
+                                <td class="py-4">{{ cycle.client.code_client }}</td>
+                                <td class="py-4">{{ cycle.agent.matricule }}</td>
+                                <td class="py-4">{{ cycle.nb_collectes }}/31</td>
+                                <td class="py-4">{{ cycle.statut }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="py-6 text-stone-500">Aucun cycle pour le moment.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="self-start rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <h2 class="text-xl font-extrabold text-stone-950">Top agents</h2>
+            <div class="mt-4 space-y-4">
+                {% for agent in top_agents %}
+                    <div class="rounded-2xl bg-stone-50 px-4 py-4">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="min-w-0">
+                                <div class="font-bold text-stone-900">{{ agent.prenom }} {{ agent.nom }}</div>
+                                <div class="text-sm text-stone-500">{{ agent.matricule }} • {{ agent.zone|default:"Zone non définie" }}</div>
+                            </div>
+                            <div class="max-w-[8.5rem] shrink-0 text-right sm:max-w-[10rem]">
+                                <div class="font-extrabold leading-tight text-sand-700">
+                                    <span class="block break-all text-base tabular-nums sm:text-lg">{{ agent.commission_totale }}</span>
+                                    <span class="mt-1 block text-[10px] uppercase tracking-[0.18em] text-sand-600">FCFA</span>
+                                </div>
+                                <div class="text-xs uppercase tracking-[0.2em] text-stone-400">{{ agent.clients_count }} clients</div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-sm text-stone-500">Aucun agent visible.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="mt-8 rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+        <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="text-xl font-extrabold text-stone-950">Commissions par cycle</h2>
+                <p class="mt-1 text-xs text-stone-400">Affichage limité à {{ recent_commissions_limit }} lignes</p>
+            </div>
+            <a href="{% url 'commissions' %}" class="text-sm font-semibold text-sand-700">Voir tout</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-left text-sm">
+                <thead class="text-stone-500">
+                    <tr>
+                        <th class="pb-3">Cycle</th>
+                        <th class="pb-3">Client</th>
+                        <th class="pb-3">Agent</th>
+                        <th class="pb-3">Commission agent</th>
+                        <th class="pb-3">Commission institution</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                    {% for cycle in recent_commissions %}
+                        <tr>
+                            <td class="py-4 font-semibold"><a href="{% url 'cycle-detail' cycle.pk %}" class="hover:text-sand-700">#{{ cycle.id }}</a></td>
+                            <td class="py-4">{{ cycle.client.code_client }}</td>
+                            <td class="py-4">{{ cycle.agent.matricule }}</td>
+                            <td class="py-4">{{ cycle.retenue.commission_agent }} FCFA</td>
+                            <td class="py-4">{{ cycle.retenue.commission_institution }} FCFA</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="py-6 text-stone-500">Aucune commission clôturée pour le moment.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% elif dashboard_variant == "agent" %}
+    <section class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <div class="text-sm font-semibold text-stone-500">Mes clients</div>
+            <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.clients_count }}</div>
+        </div>
+        <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <div class="text-sm font-semibold text-stone-500">Mes cycles</div>
+            <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.cycles_count }}</div>
+        </div>
+        <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <div class="text-sm font-semibold text-stone-500">Cycles en cours</div>
+            <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.cycles_en_cours }}</div>
+        </div>
+        <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <div class="text-sm font-semibold text-stone-500">Ma commission totale</div>
+            <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.commission_agent_total }} FCFA</div>
+        </div>
+    </section>
+
+    <section class="mt-8 grid gap-6 xl:items-start xl:grid-cols-[0.72fr_1.28fr]">
+        <div class="space-y-6">
+            <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+                <h2 class="text-xl font-extrabold text-stone-950">Mon profil agent</h2>
+                <dl class="mt-4 space-y-4 text-sm">
+                    <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+                        <dt class="text-stone-500">Matricule</dt>
+                        <dd class="font-bold text-stone-900">{{ agent_profile.matricule|default:"-" }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+                        <dt class="text-stone-500">Zone</dt>
+                        <dd class="font-bold text-stone-900">{{ agent_profile.zone|default:"Non définie" }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+                        <dt class="text-stone-500">Commission totale</dt>
+                        <dd class="font-bold text-stone-900">{{ agent_profile.commission_totale|default:0 }} FCFA</dd>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <dt class="text-stone-500">Demandes en attente</dt>
+                        <dd class="font-bold text-stone-900">{{ pending_demandes_count }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+                <div class="mb-5 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-stone-950">Derniers clients</h2>
+                        <p class="mt-1 text-xs text-stone-400">Affichage limité à {{ recent_clients_limit }} lignes</p>
+                    </div>
+                    <a href="{% url 'clients' %}" class="text-sm font-semibold text-sand-700">Voir tout</a>
+                </div>
+                <div class="space-y-3">
+                    {% for client in recent_clients %}
+                        <a href="{% url 'client-detail' client.pk %}" class="block rounded-2xl border border-stone-200 px-4 py-4 transition hover:border-stone-900">
+                            <div class="flex items-center justify-between gap-4">
+                                <div>
+                                    <div class="font-bold text-stone-900">{{ client.prenom }} {{ client.nom }}</div>
+                                    <div class="text-sm text-stone-500">{{ client.code_client }} • {{ client.telephone }}</div>
+                                </div>
+                                <div class="text-sm font-semibold text-sand-700">Voir</div>
+                            </div>
+                        </a>
+                    {% empty %}
+                        <p class="text-sm text-stone-500">Aucun client visible.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="self-start rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+                <div class="mb-5 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-stone-950">Mes cycles récents</h2>
+                        <p class="mt-1 text-xs text-stone-400">Affichage limité à {{ recent_cycles_limit }} lignes</p>
+                    </div>
+                    <a href="{% url 'cycles' %}" class="text-sm font-semibold text-sand-700">Voir tout</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-left text-sm">
+                        <thead class="text-stone-500">
+                            <tr>
+                                <th class="pb-3">Cycle</th>
+                                <th class="pb-3">Client</th>
+                                <th class="pb-3">Collectes</th>
+                                <th class="pb-3">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-stone-100">
+                            {% for cycle in recent_cycles %}
+                                <tr>
+                                    <td class="py-4 font-semibold"><a href="{% url 'cycle-detail' cycle.pk %}" class="hover:text-sand-700">#{{ cycle.id }}</a></td>
+                                    <td class="py-4">{{ cycle.client.code_client }}</td>
+                                    <td class="py-4">{{ cycle.nb_collectes }}/31</td>
+                                    <td class="py-4">{{ cycle.statut }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="4" class="py-6 text-stone-500">Aucun cycle visible.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+                <div class="mb-5 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-stone-950">Derniers mouvements</h2>
+                        <p class="mt-1 text-xs text-stone-400">Affichage limité à {{ recent_mouvements_limit }} lignes</p>
+                    </div>
+                    <a href="{% url 'mouvements' %}" class="text-sm font-semibold text-sand-700">Historique</a>
+                </div>
+                <div class="mt-4 space-y-3">
+                    {% for mouvement in recent_mouvements %}
+                        <div class="rounded-2xl border border-stone-200 px-4 py-3">
+                            <div class="flex items-center justify-between gap-4">
+                                <div>
+                                    <div class="font-bold text-stone-900">{{ mouvement.type_mouvement }}</div>
+                                    <div class="text-sm text-stone-500">
+                                        {% if mouvement.client %}{{ mouvement.client.code_client }}{% else %}-{% endif %}
+                                        {% if mouvement.cycle_id %} • Cycle #{{ mouvement.cycle_id }}{% endif %}
+                                    </div>
+                                </div>
+                                <div class="text-right font-extrabold text-stone-900">{{ mouvement.montant }}</div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-sm text-stone-500">Aucun mouvement récent.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% else %}
+    <section class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <div class="text-sm font-semibold text-stone-500">Mes cycles</div>
+            <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.cycles_count }}</div>
+        </div>
+        <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <div class="text-sm font-semibold text-stone-500">Cycles en cours</div>
+            <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.cycles_en_cours }}</div>
+        </div>
+        <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <div class="text-sm font-semibold text-stone-500">Montant retirable</div>
+            <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.montant_total_retirable }}</div>
+        </div>
+        <div class="rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <div class="text-sm font-semibold text-stone-500">Retraits enregistrés</div>
+            <div class="mt-4 text-4xl font-extrabold text-stone-950">{{ stats.retraits_count }}</div>
+        </div>
+    </section>
+
+    <section class="mt-8 grid gap-6 xl:items-start xl:grid-cols-[0.72fr_1.28fr]">
+        <div class="space-y-6">
+            <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+                <h2 class="text-xl font-extrabold text-stone-950">Mon profil</h2>
+                <dl class="mt-4 space-y-4 text-sm">
+                    <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+                        <dt class="text-stone-500">Code client</dt>
+                        <dd class="font-bold text-stone-900">{{ client_profile.code_client|default:"-" }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+                        <dt class="text-stone-500">Téléphone</dt>
+                        <dd class="font-bold text-stone-900">{{ client_profile.telephone|default:"-" }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+                        <dt class="text-stone-500">Agent responsable</dt>
+                        <dd class="font-bold text-stone-900">{{ client_profile.agent.matricule|default:"-" }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <dt class="text-stone-500">Accès détaillé</dt>
+                        <dd><a href="{% url 'my-client-space' %}" class="font-semibold text-sand-700">Mon dossier</a></dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="self-start rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+                <div class="mb-5 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-stone-950">Mes cycles récents</h2>
+                        <p class="mt-1 text-xs text-stone-400">Affichage limité à {{ recent_cycles_limit }} lignes</p>
+                    </div>
+                    <a href="{% url 'cycles' %}" class="text-sm font-semibold text-sand-700">Voir tout</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-left text-sm">
+                        <thead class="text-stone-500">
+                            <tr>
+                                <th class="pb-3">Cycle</th>
+                                <th class="pb-3">Mise</th>
+                                <th class="pb-3">Collectes</th>
+                                <th class="pb-3">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-stone-100">
+                            {% for cycle in recent_cycles %}
+                                <tr>
+                                    <td class="py-4 font-semibold"><a href="{% url 'cycle-detail' cycle.pk %}" class="hover:text-sand-700">#{{ cycle.id }}</a></td>
+                                    <td class="py-4">{{ cycle.mise }}</td>
+                                    <td class="py-4">{{ cycle.nb_collectes }}/31</td>
+                                    <td class="py-4">{{ cycle.statut }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="4" class="py-6 text-stone-500">Aucun cycle visible.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endif %}
 {% endblock %}

@@ -1,67 +1,74 @@
 # Workflow IAM-Spec-Driven
 
 ## Objectif
-Montrer une demarche de construction pilotee par les regles du besoin, puis tracee jusqu'au code, a la base et aux tests.
+Montrer une démarche de construction pilotée par les règles du besoin, puis tracée jusqu’au code, à la base et aux tests.
 
-## Chaine suivie
-1. Besoin metier
-2. Regles explicites
-3. Modele de donnees
-4. Couche metier centrale
-5. Interface de demonstration
+## Chaîne suivie
+1. Besoin métier
+2. Règles explicites
+3. Modèle de données
+4. Couche métier centrale
+5. Interface de démonstration
 6. Tests
 7. Preuves et livrables
 
 ## Application au projet
-### 1. Besoin metier
-- Gerer des agents
-- Gerer des clients
+### 1. Besoin métier
+- Gérer des agents
+- Gérer des clients
 - Ouvrir des cycles
-- Enregistrer des depots
-- Cloturer automatiquement a 31 collectes
+- Enregistrer des dépôts
+- Clôturer automatiquement à 31 collectes
 - Calculer les commissions
 - Autoriser un retrait global
+- Gérer les demandes de retrait
 - Conserver un historique financier justifiable
 
-### 2. Regles explicites
+### 2. Règles explicites
 - La mise est positive et multiple de 100
-- Un client appartient a un agent
-- Un depot est exprime en nombre de mises
-- Un cycle ne depasse jamais 31 collectes
-- La cloture automatique cree les mouvements attendus
+- Un client appartient à un agent
+- Un dépôt est exprimé en nombre de mises
+- Un cycle ne dépasse jamais 31 collectes
+- La clôture automatique crée les mouvements attendus
 - Le montant retirable se calcule depuis `CREDIT_CLIENT - RETRAIT`
+- Les rôles n’ont accès qu’aux écrans et actions qui leur sont utiles
 
-### 3. Traduction dans le modele
+### 3. Traduction dans le modèle
 - `accounts.Client.agent`
 - `finance.Cycle`
 - `finance.Collecte.nb_mises`
 - `finance.Retenue`
 - `finance.Retrait`
+- `finance.DemandeRetrait`
 - `ledger.MouvementFinancier`
 
-### 4. Traduction dans la couche metier
+### 4. Traduction dans la couche métier
 - `accounts.services.create_agent`
 - `accounts.services.create_client`
 - `finance.services.create_cycle`
 - `finance.services.create_depot`
 - `finance.services.close_cycle`
 - `finance.services.create_retrait`
+- `finance.services.create_demande_retrait`
+- `finance.services.approve_demande_retrait`
+- `finance.services.reject_demande_retrait`
+- `finance.services.execute_retrait_from_demande`
 - `finance.services.get_montant_retirable`
 
 ### 5. Traduction dans la base
 - Migrations de structure
 - Fonctions SQL de support
-- `CHECK CONSTRAINT` sur cycles, depots, retenues, retraits et mouvements
+- `CHECK CONSTRAINT` sur cycles, dépôts, retenues, retraits, demandes et mouvements
 
 ### 6. Traduction dans les tests
-- Scenarios obligatoires du sujet couverts dans
+- Scénarios obligatoires du sujet couverts dans
   [finance/tests.py](/Users/bertham/Documents/projects/finance_collecte_system/finance/tests.py#L11)
   et
-  [ledger/tests.py](/Users/bertham/Documents/projects/finance_collecte_system/ledger/tests.py#L8)
+  [accounts/tests.py](/Users/bertham/Documents/projects/finance_collecte_system/accounts/tests.py#L11)
 
 ### 7. Preuves
 - Matrice d'alignement
 - Mini-dossier
-- Mini-tracabilite
+- Mini-traçabilité
 - Rapport de tests
-- Dump SQL
+- Historique des migrations

@@ -9,10 +9,18 @@
             <p class="text-sm font-bold uppercase tracking-[0.3em] text-sand-600">Cycle</p>
             <h1 class="mt-2 text-4xl font-extrabold text-stone-950">#{{ cycle.id }}</h1>
             <p class="mt-3 text-stone-600">
-                Client {{ cycle.client.code_client }} • Agent {{ cycle.agent.matricule }} • Cree le {{ cycle.created_at|date:"d/m/Y H:i" }}
+                Client {{ cycle.client.code_client }} • Agent {{ cycle.agent.matricule }} • Créé le {{ cycle.created_at|date:"d/m/Y H:i" }}
             </p>
         </div>
-        <div class="grid gap-3 sm:grid-cols-4">
+        <div class="space-y-4">
+            {% if can_edit %}
+                <div class="flex justify-end">
+                    <a href="{% url 'cycle-update' cycle.pk %}" class="rounded-2xl border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 hover:border-stone-900">
+                        Modifier
+                    </a>
+                </div>
+            {% endif %}
+            <div class="grid gap-3 sm:grid-cols-4">
             <div class="rounded-3xl bg-stone-950 px-5 py-4 text-white">
                 <div class="text-xs uppercase tracking-[0.2em] text-stone-300">Mise</div>
                 <div class="mt-2 text-2xl font-extrabold">{{ cycle.mise }}</div>
@@ -22,94 +30,143 @@
                 <div class="mt-2 text-2xl font-extrabold">{{ cycle.nb_collectes }}/31</div>
             </div>
             <div class="rounded-3xl bg-white px-5 py-4 text-stone-900 ring-1 ring-stone-200">
-                <div class="text-xs uppercase tracking-[0.2em] text-stone-400">Total collecte</div>
+                <div class="text-xs uppercase tracking-[0.2em] text-stone-400">Montant collecté</div>
                 <div class="mt-2 text-2xl font-extrabold">{{ montant_total_collecte }}</div>
             </div>
             <div class="rounded-3xl bg-white px-5 py-4 text-stone-900 ring-1 ring-stone-200">
-                <div class="text-xs uppercase tracking-[0.2em] text-stone-400">Solde cycle</div>
-                <div class="mt-2 text-2xl font-extrabold">{{ cycle.solde_actuel }}</div>
+                <div class="text-xs uppercase tracking-[0.2em] text-stone-400">{{ cycle_secondary_metric_label }}</div>
+                <div class="mt-2 text-2xl font-extrabold">{{ cycle_secondary_metric_value }}</div>
+            </div>
             </div>
         </div>
     </div>
 </section>
 
-<section class="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
-    <div class="space-y-6">
-        <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
-            <h2 class="text-xl font-extrabold text-stone-950">Etat du cycle</h2>
-            <dl class="mt-5 space-y-4 text-sm">
-                <div class="flex items-center justify-between border-b border-stone-100 pb-3">
-                    <dt class="text-stone-500">Statut</dt>
-                    <dd class="font-bold text-stone-900">{{ cycle.statut }}</dd>
-                </div>
-                <div class="flex items-center justify-between border-b border-stone-100 pb-3">
-                    <dt class="text-stone-500">Type de cloture</dt>
-                    <dd class="font-bold text-stone-900">{{ cycle.type_cloture|default:"-" }}</dd>
-                </div>
-                <div class="flex items-center justify-between border-b border-stone-100 pb-3">
-                    <dt class="text-stone-500">Date de cloture</dt>
-                    <dd class="font-bold text-stone-900">{{ cycle.date_cloture|date:"d/m/Y H:i"|default:"-" }}</dd>
-                </div>
-                <div class="flex items-center justify-between pb-1">
-                    <dt class="text-stone-500">Montant retirable client</dt>
-                    <dd class="font-bold text-stone-900">{{ montant_total_retirable }}</dd>
-                </div>
-            </dl>
-        </div>
+<section data-tab-group data-default-tab="pilotage" class="space-y-6">
+    <div class="inline-flex w-fit max-w-full flex-wrap items-center gap-2 rounded-full border border-white/80 bg-white/90 p-2 shadow-soft">
+        <button type="button" data-tab-target="pilotage" class="rounded-full px-5 py-2.5 text-sm font-semibold">Pilotage</button>
+        <button type="button" data-tab-target="depots" class="rounded-full px-5 py-2.5 text-sm font-semibold">Dépôts</button>
+        <button type="button" data-tab-target="demandes" class="rounded-full px-5 py-2.5 text-sm font-semibold">Demandes</button>
+        {% if user.role != "CLIENT" %}
+            <button type="button" data-tab-target="mouvements" class="rounded-full px-5 py-2.5 text-sm font-semibold">Mouvements</button>
+        {% endif %}
+    </div>
 
-        {% if retenue %}
-            <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
-                <h2 class="text-xl font-extrabold text-stone-950">Cloture automatique</h2>
+    <div data-tab-panel="pilotage" class="{% if can_operate or can_request_retrait %}grid gap-6 xl:grid-cols-[0.8fr_1.2fr]{% else %}space-y-6{% endif %}">
+        <div class="space-y-6">
+            <div id="operations-cycle" class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+                <h2 class="text-xl font-extrabold text-stone-950">État du cycle</h2>
                 <dl class="mt-5 space-y-4 text-sm">
                     <div class="flex items-center justify-between border-b border-stone-100 pb-3">
-                        <dt class="text-stone-500">Retenue</dt>
-                        <dd class="font-bold text-stone-900">{{ retenue.montant }}</dd>
+                        <dt class="text-stone-500">Statut</dt>
+                        <dd class="font-bold text-stone-900">{{ cycle.statut }}</dd>
                     </div>
                     <div class="flex items-center justify-between border-b border-stone-100 pb-3">
-                        <dt class="text-stone-500">Commission agent</dt>
-                        <dd class="font-bold text-stone-900">{{ retenue.commission_agent }}</dd>
+                        <dt class="text-stone-500">Type de clôture</dt>
+                        <dd class="font-bold text-stone-900">{{ cycle.type_cloture|default:"-" }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+                        <dt class="text-stone-500">Date de clôture</dt>
+                        <dd class="font-bold text-stone-900">{{ cycle.date_cloture|date:"d/m/Y H:i"|default:"-" }}</dd>
                     </div>
                     <div class="flex items-center justify-between pb-1">
-                        <dt class="text-stone-500">Commission institution</dt>
-                        <dd class="font-bold text-stone-900">{{ retenue.commission_institution }}</dd>
+                        <dt class="text-stone-500">Montant retirable client</dt>
+                        <dd class="font-bold text-stone-900">{{ montant_total_retirable }}</dd>
                     </div>
                 </dl>
             </div>
-        {% endif %}
 
-        <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
-            <h2 class="text-xl font-extrabold text-stone-950">Operations</h2>
-            {% if can_operate %}
-                <div class="mt-5 space-y-4">
-                    <form method="post" action="{% url 'cycle-depot' cycle.pk %}" class="space-y-3 rounded-3xl border border-stone-200 bg-stone-50 p-4">
-                        {% csrf_token %}
-                        <div class="font-bold text-stone-900">Enregistrer un depot</div>
-                        {% for field in depot_form %}
-                            <div>
-                                <label for="{{ field.id_for_label }}" class="text-sm font-semibold text-stone-700">{{ field.label }}</label>
-                                {{ field }}
-                                {% if field.errors %}
-                                    <p class="mt-2 text-sm text-rose-600">{{ field.errors|join:", " }}</p>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                        <button class="w-full rounded-2xl bg-stone-950 px-4 py-3 text-sm font-bold uppercase tracking-[0.18em] text-white hover:bg-sand-700">
-                            Valider le depot
-                        </button>
-                    </form>
-                </div>
-            {% else %}
-                <div class="mt-4 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-4 text-sm text-stone-600">
-                    Consultation seule pour votre role.
+            {% if retenue %}
+                <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+                    <h2 class="text-xl font-extrabold text-stone-950">Détail de clôture</h2>
+                    <dl class="mt-5 space-y-4 text-sm">
+                        <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+                            <dt class="text-stone-500">Retenue</dt>
+                            <dd class="font-bold text-stone-900">{{ retenue.montant }}</dd>
+                        </div>
+                        <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+                            <dt class="text-stone-500">Commission agent</dt>
+                            <dd class="font-bold text-stone-900">{{ retenue.commission_agent }}</dd>
+                        </div>
+                        <div class="flex items-center justify-between pb-1">
+                            <dt class="text-stone-500">Commission institution</dt>
+                            <dd class="font-bold text-stone-900">{{ retenue.commission_institution }}</dd>
+                        </div>
+                    </dl>
                 </div>
             {% endif %}
         </div>
+
+        {% if can_operate or can_request_retrait %}
+            <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+                <h2 class="text-xl font-extrabold text-stone-950">Opérations</h2>
+                {% if can_operate %}
+                    <div class="mt-5 space-y-4">
+                        {% if cycle.statut == "EN_COURS" %}
+                            <form method="post" action="{% url 'cycle-depot' cycle.pk %}" class="space-y-3 rounded-3xl border border-stone-200 bg-stone-50 p-4">
+                                {% csrf_token %}
+                                <div class="font-bold text-stone-900">Enregistrer un dépôt</div>
+                                {% for field in depot_form %}
+                                    {% include "partials/form_field.html" with field=field %}
+                                {% endfor %}
+                                <button class="w-full rounded-2xl bg-stone-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sand-700">
+                                    Valider le dépôt
+                                </button>
+                            </form>
+                        {% endif %}
+                        <form method="post" action="{% url 'cycle-retrait-direct' cycle.pk %}" class="space-y-3 rounded-3xl border border-stone-200 bg-stone-50 p-4">
+                            {% csrf_token %}
+                            <div>
+                                <div class="font-bold text-stone-900">Retrait du client</div>
+                                <div class="mt-1 text-sm text-stone-500">Utilise le montant retirable déjà disponible pour ce client.</div>
+                            </div>
+                            {% for field in retrait_direct_form %}
+                                {% include "partials/form_field.html" with field=field %}
+                            {% endfor %}
+                            <button class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-stone-800 hover:border-stone-900">
+                                Enregistrer le retrait
+                            </button>
+                        </form>
+                        {% if can_manage_demandes and cycle.statut == "EN_COURS" %}
+                            <form method="post" action="{% url 'cycle-demande-retrait' cycle.pk %}" class="space-y-3 rounded-3xl border border-stone-200 bg-stone-50 p-4">
+                                {% csrf_token %}
+                                <input type="hidden" name="type_demande" value="ANTICIPE">
+                                <div class="font-bold text-stone-900">Retrait anticipé</div>
+                                {% include "partials/form_field.html" with field=demande_retrait_form.montant_souhaite %}
+                                {% include "partials/form_field.html" with field=demande_retrait_form.motif %}
+                                <button class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-stone-800 hover:border-stone-900">
+                                    Enregistrer la demande anticipée
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if can_request_retrait %}
+                    <div class="{% if can_operate %}mt-4 {% else %}mt-5 {% endif %}rounded-3xl border border-stone-200 bg-stone-50 p-4">
+                        <h3 class="font-bold text-stone-900">Demande de retrait</h3>
+                        <p class="mt-1 text-sm text-stone-500">
+                            Une demande anticipée concerne un cycle en cours. Une demande normale concerne un cycle clôturé.
+                        </p>
+                        <form method="post" action="{% url 'cycle-demande-retrait' cycle.pk %}" class="mt-4 grid gap-4">
+                            {% csrf_token %}
+                            {% for field in demande_retrait_form %}
+                                {% include "partials/form_field.html" with field=field %}
+                            {% endfor %}
+                            <button class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-stone-800 hover:border-stone-900">
+                                Enregistrer la demande
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
     </div>
 
-    <div class="space-y-6">
+    <div data-tab-panel="depots" class="hidden">
         <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
             <div class="mb-5 flex items-center justify-between">
-                <h2 class="text-xl font-extrabold text-stone-950">Depots</h2>
+                <h2 class="text-xl font-extrabold text-stone-950">Dépôts</h2>
                 <span class="rounded-full bg-sand-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-sand-700">{{ depots|length }}</span>
             </div>
             <div class="space-y-3">
@@ -124,33 +181,110 @@
                         </div>
                     </div>
                 {% empty %}
-                    <p class="text-sm text-stone-500">Aucun depot enregistre.</p>
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
-            <div class="mb-5 flex items-center justify-between">
-                <h2 class="text-xl font-extrabold text-stone-950">Mouvements financiers</h2>
-                <span class="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-stone-700">{{ mouvements|length }}</span>
-            </div>
-            <div class="space-y-3">
-                {% for mouvement in mouvements %}
-                    <div class="rounded-2xl border border-stone-200 px-4 py-4">
-                        <div class="flex items-start justify-between gap-4">
-                            <div>
-                                <div class="font-bold text-stone-900">{{ mouvement.type_mouvement }}</div>
-                                <div class="mt-1 text-sm text-stone-500">{{ mouvement.source }} -> {{ mouvement.destination }}</div>
-                                <div class="mt-1 text-xs text-stone-400">{{ mouvement.created_at|date:"d/m/Y H:i" }}</div>
-                            </div>
-                            <div class="text-right text-lg font-extrabold text-stone-950">{{ mouvement.montant }}</div>
-                        </div>
-                    </div>
-                {% empty %}
-                    <p class="text-sm text-stone-500">Aucun mouvement sur ce cycle.</p>
+                    <p class="text-sm text-stone-500">Aucun dépôt enregistré.</p>
                 {% endfor %}
             </div>
         </div>
     </div>
+
+    <div data-tab-panel="demandes" class="hidden">
+        <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+            <div class="mb-5 flex items-center justify-between">
+                <h2 class="text-xl font-extrabold text-stone-950">Demandes de retrait</h2>
+                <span class="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-stone-700">{{ demandes_retrait|length }}</span>
+            </div>
+            <div class="space-y-3">
+                {% for demande in demandes_retrait %}
+                    <div id="demande-{{ demande.pk }}" class="rounded-2xl border border-stone-200 px-4 py-4">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <div class="font-bold text-stone-900">{{ demande.code }}</div>
+                                <div class="mt-1 text-sm text-stone-500">
+                                    {% if demande.type_demande == "ANTICIPE" %}Retrait anticipé{% else %}Retrait normal{% endif %}
+                                    •
+                                    {% if demande.statut == "EN_ATTENTE" %}En attente{% elif demande.statut == "VALIDEE" %}Validée{% else %}Rejetée{% endif %}
+                                    • {{ demande.created_at|date:"d/m/Y H:i" }}
+                                </div>
+                                {% if demande.motif %}
+                                    <div class="mt-2 text-sm text-stone-600">{{ demande.motif }}</div>
+                                {% endif %}
+                                {% if demande.commentaire_traitement %}
+                                    <div class="mt-2 text-sm text-stone-500">Traitement: {{ demande.commentaire_traitement }}</div>
+                                {% endif %}
+                                {% if demande.retrait %}
+                                    <div class="mt-2 text-sm font-semibold text-emerald-700">
+                                        Retrait exécuté: {{ demande.retrait.montant }} • {{ demande.retrait.code }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-semibold text-stone-900">
+                                    {% if demande.montant_souhaite %}
+                                        {{ demande.montant_souhaite }}
+                                    {% else %}
+                                        Non précisé
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% if can_manage_demandes %}
+                            <div class="mt-4 flex flex-wrap justify-end gap-2">
+                                {% if demande.statut == "EN_ATTENTE" %}
+                                    <form method="post" action="{% url 'demande-retrait-approve' demande.pk %}">
+                                        {% csrf_token %}
+                                        <button class="rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700">
+                                            Valider
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{% url 'demande-retrait-reject' demande.pk %}">
+                                        {% csrf_token %}
+                                        <button class="rounded-full border border-rose-300 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:border-rose-500">
+                                            Rejeter
+                                        </button>
+                                    </form>
+                                {% elif demande.statut == "VALIDEE" and not demande.retrait %}
+                                    <form method="post" action="{% url 'demande-retrait-execute' demande.pk %}">
+                                        {% csrf_token %}
+                                        <button class="rounded-full bg-stone-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sand-700">
+                                            Effectuer le retrait
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <p class="text-sm text-stone-500">Aucune demande enregistrée pour ce cycle.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {% if user.role != "CLIENT" %}
+        <div data-tab-panel="mouvements" class="hidden">
+            <div class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
+                <div class="mb-5 flex items-center justify-between">
+                    <h2 class="text-xl font-extrabold text-stone-950">Mouvements financiers</h2>
+                    <span class="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-stone-700">{{ mouvements|length }}</span>
+                </div>
+                <div class="space-y-3">
+                    {% for mouvement in mouvements %}
+                        <div class="rounded-2xl border border-stone-200 px-4 py-4">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <div class="font-bold text-stone-900">{{ mouvement.type_mouvement }}</div>
+                                    <div class="mt-1 text-sm text-stone-500">{{ mouvement.source }} → {{ mouvement.destination }}</div>
+                                    <div class="mt-1 text-xs text-stone-400">{{ mouvement.created_at|date:"d/m/Y H:i" }}</div>
+                                </div>
+                                <div class="text-right text-lg font-extrabold text-stone-950">{{ mouvement.montant }}</div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-sm text-stone-500">Aucun mouvement sur ce cycle.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
 </section>
 {% endblock %}

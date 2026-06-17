@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Collecte, Cycle, Retenue, Retrait
+from .models import Collecte, Cycle, DemandeRetrait, Retenue, Retrait
 
 
 @admin.register(Cycle)
@@ -28,3 +28,10 @@ class RetraitAdmin(admin.ModelAdmin):
     list_display = ("code", "client", "montant", "created_at")
     list_filter = ("created_at",)
     search_fields = ("code", "client__code_client", "client__nom", "client__prenom")
+
+
+@admin.register(DemandeRetrait)
+class DemandeRetraitAdmin(admin.ModelAdmin):
+    list_display = ("code", "cycle", "client", "type_demande", "statut", "montant_souhaite", "processed_at", "created_at")
+    list_filter = ("type_demande", "statut", "created_at")
+    search_fields = ("code", "client__code_client", "client__nom", "client__prenom", "cycle__id")

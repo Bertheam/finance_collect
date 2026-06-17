@@ -6,33 +6,42 @@
 <section class="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft">
     <div class="mb-5 flex items-end justify-between">
         <div>
-            <p class="text-sm font-bold uppercase tracking-[0.3em] text-sand-600">Traceabilite</p>
+            <p class="text-sm font-bold uppercase tracking-[0.3em] text-sand-600">Traçabilité</p>
             <h1 class="mt-2 text-3xl font-extrabold text-stone-950">Mouvements financiers</h1>
         </div>
-        <div class="text-sm text-stone-500">{{ total_count }} element(s)</div>
+        <div class="text-sm text-stone-500">{{ total_count }} élément(s)</div>
     </div>
 
-    <form method="get" class="mb-5 grid gap-3 rounded-3xl bg-stone-50 p-4 xl:grid-cols-[1fr_220px_220px_auto]">
-        <input type="text" name="q" value="{{ filters.q }}" placeholder="Client, agent, cycle..." class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
-        <select name="type_mouvement" class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+    <form method="get" class="mb-5 flex flex-wrap items-end gap-3 rounded-3xl bg-stone-50 p-4">
+        <div class="min-w-[16rem] flex-[1.4]">
+            <label for="mouvements-search" class="mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">Recherche</label>
+            <input id="mouvements-search" type="text" name="q" value="{{ filters.q }}" placeholder="Client, agent, cycle..." class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-2.5 text-sm text-stone-900 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+        </div>
+        <div class="min-w-[14rem] flex-1">
+            <label for="mouvements-type" class="mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">Type</label>
+            <select id="mouvements-type" name="type_mouvement" class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-2.5 text-sm text-stone-900 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
             <option value="">Tous les types</option>
             {% for value, label in type_choices %}
                 <option value="{{ value }}" {% if filters.type_mouvement == value %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
-        </select>
-        <select name="client_id" class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
-            <option value="">Tous les clients</option>
-            {% for client in clients_filter %}
-                <option value="{{ client.pk }}" {% if filters.client_id == client.pk|stringformat:'s' %}selected{% endif %}>{{ client.code_client }}</option>
-            {% endfor %}
-        </select>
+            </select>
+        </div>
+        <div class="min-w-[14rem] flex-1">
+            <label for="mouvements-client" class="mb-1 block text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">Client</label>
+            <select id="mouvements-client" name="client_id" class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-2.5 text-sm text-stone-900 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+                <option value="">Tous les clients</option>
+                {% for client in clients_filter %}
+                    <option value="{{ client.pk }}" {% if filters.client_id == client.pk|stringformat:'s' %}selected{% endif %}>{{ client.code_client }}</option>
+                {% endfor %}
+            </select>
+        </div>
         <div class="flex gap-2">
-            <button class="rounded-2xl bg-stone-950 px-4 py-3 text-sm font-bold uppercase tracking-[0.18em] text-white hover:bg-sand-700">Filtrer</button>
-            <a href="{% url 'mouvements' %}" class="rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm font-semibold text-stone-700 hover:border-stone-900">Reset</a>
+            <button class="rounded-2xl bg-stone-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sand-700">Filtrer</button>
+            <a href="{% url 'mouvements' %}" class="rounded-2xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-medium text-stone-700 hover:border-stone-900">Réinitialiser</a>
         </div>
     </form>
 
-    <div class="overflow-x-auto">
+    <div class="overflow-visible">
         <table class="min-w-full text-left text-sm">
             <thead class="text-stone-500">
                 <tr>
@@ -53,7 +62,7 @@
                         <td class="py-4">{% if mouvement.client %}{{ mouvement.client.code_client }}{% else %}-{% endif %}</td>
                         <td class="py-4">{% if mouvement.agent %}{{ mouvement.agent.matricule }}{% else %}-{% endif %}</td>
                         <td class="py-4">{% if mouvement.cycle_id %}#{{ mouvement.cycle_id }}{% else %}-{% endif %}</td>
-                        <td class="py-4">{{ mouvement.source }} -> {{ mouvement.destination }}</td>
+                        <td class="py-4">{{ mouvement.source }} → {{ mouvement.destination }}</td>
                         <td class="py-4">{{ mouvement.montant }}</td>
                     </tr>
                 {% empty %}

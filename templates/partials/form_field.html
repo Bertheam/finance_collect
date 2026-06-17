@@ -1,0 +1,12 @@
+<div class="{% if field.name == 'adresse' or field.name == 'create_account' or field.name == 'username' or field.name == 'password' or field.name == 'password_confirm' or field.name == 'new_password' or field.name == 'new_password_confirm' %}md:col-span-2{% endif %}">
+    <label for="{{ field.id_for_label }}" class="text-sm font-semibold text-stone-700">
+        {{ field.label }}{% if field.field.required %}<span class="ml-1 text-rose-500">*</span>{% endif %}
+    </label>
+    {{ field }}
+    {% if field.help_text %}
+        <p class="mt-1 text-xs text-stone-500">{{ field.help_text }}</p>
+    {% endif %}
+    {% if field.errors %}
+        <p class="mt-2 text-sm text-rose-600">{{ field.errors|join:", " }}</p>
+    {% endif %}
+</div>
